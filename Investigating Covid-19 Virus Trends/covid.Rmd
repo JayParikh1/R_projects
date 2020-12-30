@@ -1,0 +1,30 @@
+---
+title: "Coronavirus"
+author: "Jay Parikh"
+date: "07/11/2020"
+output: html_document
+---
+
+This is the script for COVID-19.
+
+```{r}
+library(tidyverse)
+
+covid_df <- read_csv("covid19.csv")
+
+dim(covid_df)
+vector_cols <- colnames(covid_df)
+vector_cols #represents a vector
+
+head(covid_df)
+covid_df_all_states <- covid_df %>% filter(Province_State == "All States") %>% select(-Province_State)
+
+covid_df_all_states_daily <- covid_df_all_states %>% select(Date, Country_Region, active, hospitalizedCurr, daily_tested, daily_positive)
+
+```
+
+```{r}
+covid_df_all_states_daily_sum <- covid_df_all_states_daily %>% group_by(Country_Region) %>% summarise(tested = sum(daily_tested), positive = sum(daily_positive), active = sum(active), hospitalized = sum(hospitalizedCurr)) %>% arrange(-tested)
+
+covid_top_10 <- head(covid_df_all_states_daily_sum, 10)
+```
