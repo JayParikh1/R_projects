@@ -1,0 +1,63 @@
+---
+title: "book_reviews.Rmd"
+author: "Jay Parikh"
+date: "09/11/2020"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(readr)
+
+book_reviews <- read_csv("book_reviews.csv")
+dim(book_reviews)
+glimpse(book_reviews)
+
+colnames(book_reviews)
+
+#getting the unique data for each column
+
+for (c in colnames(book_reviews)) {
+  print(c)
+  print(unique(book_reviews[[c]]))
+}
+
+complete_reviews <- book_reviews %>% filter(!(is.na(review)))
+dim(complete_reviews)
+
+
+complete_reviews <- complete_reviews %>% 
+  mutate(
+    state = case_when(
+      state == "California" ~ "CA",
+      state == "Florida" ~ "FL",
+      state == "Texas" ~ "TX",
+      state == "New York" ~ "NY",
+      TRUE ~ state #ignore cases where it's already postal code
+    )
+  )
+
+
+complete_reviews <- complete_reviews %>%
+  mutate(
+    review_num = case_when(
+      review == "Poor" ~ 1,
+      review == "Fair" ~ 2,
+      review == "Good" ~ 3,
+      review == "Great" ~ 4,
+      review == "Excellent" ~ 5
+    ),
+    is_high_review = if_else(review_num > 3, TRUE, FALSE)
+  )
+
+complete_reviews <- complete_reviews %>% group_by(book) %>% summarize(
+  purchased = n() #assigning purchased to # of rows
+  ) %>% arrange(-purchased)
+
+complete_reviews
+
+
+
+
+```

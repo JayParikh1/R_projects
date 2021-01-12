@@ -1,0 +1,41 @@
+---
+title: "book_reviews"
+author: "Jay Parikh"
+date: "30/12/2020"
+output: html_document
+---
+
+```{r}
+book_reviews <- read_csv("book_reviews.csv")
+glimpse(book_reviews)
+
+book_reviews_no_na <- book_reviews %>% filter(!(is.na(review)))
+
+book_reviews_acronyms <- book_reviews_no_na %>% 
+  mutate(state = case_when(
+    state == "Texas" ~ "TX",
+    state == "California" ~ "CA",
+    state == "Florida" ~ "FL",
+    state == "New York" ~ "NY",
+    TRUE ~ state #ignore cases where it's already postal code
+  ))
+
+book_reviews_numerical <- book_reviews_acronyms %>% 
+  mutate(review = case_when(
+    review == "Poor" ~ 1,
+    review == "Fair" ~ 2,
+    review == "Good" ~ 3,
+    review == "Great" ~ 4,
+    review == "Excellent" ~ 5
+  )) %>%
+  mutate(is_high_review = if_else(
+    review >= 4, TRUE, FALSE
+  ))
+
+book_reviews_purchased <- book_reviews_numerical %>% group_by(book) %>% summarise(
+  purchased = n()
+) %>% arrange(-purchased)
+
+head(book_reviews_purchased)
+```
+fundamentals of R seems to be the best purchased book. 

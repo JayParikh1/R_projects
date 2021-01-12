@@ -1,0 +1,52 @@
+---
+title: "sales2019"
+author: "Jay Parikh"
+date: "30/12/2020"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+sales <- read_csv("sales2019.csv")
+dim(sales)
+glimpse(sales)
+
+#step 1: get rid of missing data
+
+sales <- sales %>% filter(!(is.na(user_submitted_review)))
+dim(sales)
+
+sales_mean <- sales %>% filter(!(is.na(total_purchased))) %>% pull(total_purchased) %>% mean
+#pull function selects a column in a data frame and transforms it into a vector
+
+sales <- sales %>% mutate(total_purchased = if_else(is.na(total_purchased), sales_mean, total_purchased))
+
+unique(sales$user_submitted_review)
+
+is_positive <- function(sentence) {
+  case_when(
+    str_detect(sentence, "okay") ~ TRUE,
+    str_detect(sentence, "Awesome") ~ TRUE,
+    str_detect(sentence, "Never") ~ TRUE,
+    str_detect(sentence, "learned") ~ TRUE,
+    str_detect(sentence, "OK") ~ TRUE,
+    TRUE ~ FALSE # if none of the above
+  )
+}
+
+sales <- sales %>% mutate(is_positive = unlist(map(user_submitted_review, is_positive)))
+
+sales <- sales %>% mutate(pre_or_post = if_else(mdy(date) < ymd("2019/07/01"), "Pre", "Post"))
+
+sales_title <- sales %>% group_by(pre_or_post, title) %>% summarise(books_sold = sum(total_purchased))
+
+sales_customer <- sales %>% group_by(pre_or_post, customer_type) %>% summarise(books_sold = sum(total_purchased))
+
+sales_is_positive <- sales %>% group_by(pre_or_post) %>% summarise(is_positive = sum(is_positive))
+
+
+```
